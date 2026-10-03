@@ -1,32 +1,32 @@
-# ML Service Delivery
+# Развёртывание и наблюдаемость ML-сервиса
 
-Deployment and observability configuration for the companion [Retail Demand Forecasting](https://github.com/trima03/demand-forecasting-ml) service. It includes a hardened local stack for repeatable demos and Kubernetes manifests for a small cluster.
+Конфигурация развёртывания и мониторинга для сопутствующего сервиса [прогнозирования спроса в розничной торговле](https://github.com/trima03/demand-forecasting-ml). В проект входят защищённый локальный стек для повторяемых демонстраций и манифесты Kubernetes для небольшого кластера.
 
-## What this demonstrates
+## Что демонстрирует проект
 
-- Container deployment with non-root execution, read-only filesystem and dropped Linux capabilities.
-- Liveness/readiness probes, resource requests/limits, two replicas and CPU-based autoscaling.
-- Prometheus request, error-rate and latency monitoring, with actionable alert rules.
-- A provisioned Grafana dashboard and Prometheus datasource.
-- CI validation for Docker Compose and Kubernetes manifests.
+- Запуск контейнера без привилегий: от непривилегированного пользователя, с файловой системой только для чтения и отключёнными возможностями Linux.
+- Пробы liveness/readiness, запросы и лимиты ресурсов, две реплики и автомасштабирование по CPU.
+- Мониторинг запросов, ошибок и задержки в Prometheus, а также правила оповещений.
+- Предварительно настроенную панель Grafana и источник данных Prometheus.
+- Проверку конфигурации Docker Compose и манифестов Kubernetes в CI.
 
-This repository contains deployment configuration; the forecasting API and its model artifact are built in the companion repository. The local Compose stack pulls its image from GHCR.
+В этом репозитории находится конфигурация развёртывания. API прогнозирования и артефакт модели собираются в сопутствующем репозитории. Локальный стек Compose загружает образ API из GHCR.
 
-## Start the local monitoring stack
+## Запуск локального стека мониторинга
 
-Prerequisites: Docker Engine with the Compose plugin, and a published API image.
+Требуются Docker Engine с плагином Compose и опубликованный образ API.
 
 ```bash
 cp .env.example .env
-# Edit .env: set FORECAST_IMAGE to your API image and choose a unique Grafana password.
+# Измените .env: укажите образ API в FORECAST_IMAGE и задайте уникальный пароль Grafana.
 docker compose up -d
 ```
 
-Open the API at `http://localhost:8000/docs`, Prometheus at `http://localhost:9090`, and Grafana at `http://localhost:3000`. The dashboard is provisioned automatically. The forecast API exports Prometheus metrics at `/metrics`.
+API доступен по адресу `http://localhost:8000/docs`, Prometheus — `http://localhost:9090`, Grafana — `http://localhost:3000`. Панель Grafana настраивается автоматически. API публикует метрики Prometheus по пути `/metrics`.
 
-## Deploy to Kubernetes
+## Развёртывание в Kubernetes
 
-Apply the manifests to a cluster that has a metrics server for the HPA:
+Примените манифесты к кластеру, в котором установлен Metrics Server для работы HPA:
 
 ```bash
 kubectl apply -f k8s/
@@ -34,26 +34,26 @@ kubectl rollout status deployment/demand-forecast-api
 kubectl get hpa demand-forecast-api
 ```
 
-The pod uses HTTP startup, liveness and readiness probes, has no service-account token, runs as a non-root UID, and has CPU/memory requests and limits. Metrics annotations let compatible Prometheus installations discover the service. Add a network policy and ingress appropriate to your cluster before exposing it outside the cluster.
+В поде настроены HTTP-пробы запуска, liveness и readiness; токен сервисной учётной записи отключён, контейнер работает с непривилегированным UID, а для CPU и памяти заданы запросы и лимиты. Аннотации метрик позволяют совместимым установкам Prometheus обнаруживать сервис. Перед публикацией сервиса за пределами кластера добавьте подходящие сетевые политики и ingress.
 
-## Alerts
+## Оповещения
 
-- `ForecastApiUnavailable`: scrape target has been down for 2 minutes.
-- `ForecastApiHighErrorRate`: server errors exceed 5% for 5 minutes.
-- `ForecastApiSlowRequests`: p95 latency exceeds one second for 10 minutes.
+- `ForecastApiUnavailable`: цель мониторинга недоступна в течение 2 минут.
+- `ForecastApiHighErrorRate`: доля серверных ошибок превышает 5% в течение 5 минут.
+- `ForecastApiSlowRequests`: задержка p95 превышает одну секунду в течение 10 минут.
 
-Thresholds are demo defaults and should be tuned against real service-level objectives.
+Пороговые значения заданы для демонстрации. Для реального сервиса настройте их в соответствии с целевыми показателями уровня сервиса.
 
-## Repository layout
+## Структура репозитория
 
 ```text
 compose.yaml
-prometheus/   scrape config and alert rules
-grafana/      provisioned dashboard and datasource
-k8s/          Deployment, Service and HPA
-.github/      deployment configuration validation
+prometheus/   конфигурация сбора метрик и правила оповещений
+grafana/      подготовленные панель мониторинга и источник данных
+k8s/          Deployment, Service и HPA
+.github/      проверка конфигурации развёртывания
 ```
 
-## Tradeoffs
+## Компромиссы и ограничения
 
-The demo targets a small single cluster. It does not include cloud-specific Terraform, TLS/ingress, an alert notification receiver, or a managed secret store. Those should be added for a real production environment.
+Проект рассчитан на небольшой одиночный кластер. В него не входят Terraform для конкретного облака, TLS и ingress, получатель уведомлений об оповещениях или управляемое хранилище секретов. Для реального промышленного окружения их нужно добавить.
