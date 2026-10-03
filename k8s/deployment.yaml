@@ -29,7 +29,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api
-          image: ghcr.io/trima03/demand-forecasting-ml:latest
+          image: ghcr.io/trima03/demand-forecasting-ml:v0.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

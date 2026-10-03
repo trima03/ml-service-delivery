@@ -2,7 +2,7 @@ name: ml-service-delivery
 
 services:
   forecast-api:
-    image: ${FORECAST_IMAGE:-ghcr.io/trima03/demand-forecasting-ml:latest}
+    image: ${FORECAST_IMAGE:-ghcr.io/trima03/demand-forecasting-ml:v0.1.0}
     pull_policy: if_not_present
     ports:
       - "8000:8000"
