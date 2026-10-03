@@ -1,0 +1,19 @@
+name: Deployment config checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Docker Compose configuration
+        env:
+          FORECAST_IMAGE: ghcr.io/example/demand-forecasting-ml:latest
+          GRAFANA_ADMIN_PASSWORD: ci-placeholder
+        run: docker compose config --quiet
+      - name: Validate Kubernetes manifests
+        run: docker run --rm -v "$PWD:/work" -w /work ghcr.io/yannh/kubeconform:v0.6.7 -strict -summary k8s/

@@ -1,0 +1,34 @@
+groups:
+  - name: demand-forecast-api
+    rules:
+      - alert: ForecastApiUnavailable
+        expr: up{job="demand-forecast-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Demand forecast API is unavailable
+          description: Prometheus has failed to scrape the API for two minutes.
+
+      - alert: ForecastApiHighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="demand-forecast-api", status=~"5.."}[5m]))
+          / clamp_min(sum(rate(http_requests_total{job="demand-forecast-api"}[5m])), 1e-9) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Forecast API server error rate is above 5%
+          description: More than 5% of API requests returned a server error in the last five minutes.
+
+      - alert: ForecastApiSlowRequests
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_request_duration_seconds_bucket{job="demand-forecast-api"}[5m]))
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Forecast API p95 latency is above one second
+          description: Check model loading, CPU saturation and request volume.
