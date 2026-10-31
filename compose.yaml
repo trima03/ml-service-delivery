@@ -5,7 +5,7 @@ services:
     image: ${FORECAST_IMAGE:-ghcr.io/trima03/demand-forecasting-ml:v0.1.0}
     pull_policy: if_not_present
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -33,7 +33,7 @@ services:
       - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     restart: unless-stopped
     networks: [monitoring]
 
@@ -48,7 +48,7 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     restart: unless-stopped
     networks: [monitoring]
 
